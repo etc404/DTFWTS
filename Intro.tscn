@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://MainCameraIntroScene.gd" type="Script" id=1]
+[ext_resource path="res://TextBox.gd" type="Script" id=2]
+[ext_resource path="res://lights.png" type="Texture" id=3]
+
+[sub_resource type="Environment" id=1]
+background_mode = 4
+tonemap_mode = 1
+tonemap_exposure = 0.01
+
+[node name="Node2D" type="Node2D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource( 1 )
+
+[node name="Label" type="Label" parent="."]
+margin_left = -84.0
+margin_right = 84.0
+margin_bottom = 14.0
+text = "Do You Watch The Stars?"
+align = 1
+valign = 1
+script = ExtResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Light2D" type="Light2D" parent="Label"]
+texture = ExtResource( 3 )
+
+[node name="MainCameraIntroScene" type="Camera2D" parent="."]
+current = true
+zoom = Vector2( 0.2, 0.2 )
+script = ExtResource( 1 )

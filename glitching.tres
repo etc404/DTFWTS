@@ -1,0 +1,15 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=2]
+
+[ext_resource path="res://ErrRor.gdshader" type="Shader" id=1]
+
+[resource]
+render_priority = 1
+shader = ExtResource( 1 )
+shader_param/red_displacement = 0.5
+shader_param/green_displacement = -0.25
+shader_param/blue_displacement = -0.25
+shader_param/ghost = 0.5
+shader_param/intensity = 0.5
+shader_param/scan_effect = 0.5
+shader_param/distortion_effect = 0.5
+shader_param/negative_effect = 0.5

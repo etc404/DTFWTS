@@ -1,0 +1,186 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://LightTile.gd" type="Script" id=1]
+[ext_resource path="res://light_tile.png" type="Texture" id=2]
+
+[sub_resource type="Shader" id=17]
+code = "shader_type canvas_item;
+
+
+uniform float red_displacement : hint_range(-1.0,1.0) = 0.5;
+uniform float green_displacement : hint_range(-1.0,1.0) = -0.25;
+uniform float blue_displacement : hint_range(-1.0,1.0) = -0.25;
+uniform float ghost : hint_range(0.0, 1.0) = 0.5;
+uniform float intensity : hint_range(0.0,1.0) = 0.5;
+uniform float scan_effect : hint_range(0.0,1.0) = 0.5;
+uniform float distortion_effect : hint_range(0.0,1.0) = 0.5;
+uniform float negative_effect : hint_range(0.0,1.0) = 0.5;
+
+uniform float bloomRadius = 1.0;
+uniform float bloomThreshold = 1.0;
+uniform float bloomIntensity = 1.0;
+
+vec3 GetBloomPixel(sampler2D tex, vec2 uv, vec2 texPixelSize) {
+	vec2 uv2 = floor(uv / texPixelSize) * texPixelSize;
+	uv2 += texPixelSize * .001;
+	vec3 tl = max(texture(tex, uv2).rgb - bloomThreshold, 0.0);
+	vec3 tr = max(texture(tex, uv2 + vec2(texPixelSize.x, 0.0)).rgb - bloomThreshold, 0.0);
+	vec3 bl = max(texture(tex, uv2 + vec2(0.0, texPixelSize.y)).rgb - bloomThreshold, 0.0);
+	vec3 br = max(texture(tex, uv2 + vec2(texPixelSize.x, texPixelSize.y)).rgb - bloomThreshold, 0.0);
+	vec2 f = fract( uv / texPixelSize );
+
+	vec3 tA = mix( tl, tr, f.x );
+	vec3 tB = mix( bl, br, f.x );
+
+	return mix( tA, tB, f.y );
+}
+
+vec3 GetBloom(sampler2D tex, vec2 uv, vec2 texPixelSize) {
+	vec3 bloom = vec3(0.0);
+	vec2 off = vec2(1) * texPixelSize * bloomRadius;
+	bloom += GetBloomPixel(tex, uv + off * vec2(-1, -1), texPixelSize * bloomRadius) * 0.292893;
+	bloom += GetBloomPixel(tex, uv + off * vec2(-1, 0), texPixelSize * bloomRadius) * 0.5;
+	bloom += GetBloomPixel(tex, uv + off * vec2(-1, 1), texPixelSize * bloomRadius) * 0.292893;
+	bloom += GetBloomPixel(tex, uv + off * vec2(0, -1), texPixelSize * bloomRadius) * 0.5;
+	bloom += GetBloomPixel(tex, uv + off * vec2(0, 0), texPixelSize * bloomRadius) * 1.0;
+	bloom += GetBloomPixel(tex, uv + off * vec2(0, 1), texPixelSize * bloomRadius) * 0.5;
+	bloom += GetBloomPixel(tex, uv + off * vec2(1, -1), texPixelSize * bloomRadius) * 0.292893;
+	bloom += GetBloomPixel(tex, uv + off * vec2(1, 0), texPixelSize * bloomRadius) * 0.5;
+	bloom += GetBloomPixel(tex, uv + off * vec2(1, 1), texPixelSize * bloomRadius) * 0.292893;
+	bloom /= 4.171573f;
+	return bloom;
+}
+
+void fragment() {
+	vec4 col = texture(TEXTURE, UV);
+	vec3 bloom = GetBloom(TEXTURE, UV, TEXTURE_PIXEL_SIZE);
+	col.rgb += bloom * bloomIntensity;
+	COLOR = col;
+	vec4 baseTexture = texture(TEXTURE, UV);
+	vec4 color1 = texture(TEXTURE, UV+vec2(sin(TIME*0.2*intensity), tan(UV.y)));
+	COLOR = (1.0-scan_effect)*baseTexture*0.75 + scan_effect*color1;
+	
+	vec4 color2 = texture(TEXTURE, UV+vec2(fract(TIME*0.01*intensity), cos(fract(TIME*intensity)*10.0)));
+	COLOR = COLOR + ((1.0-distortion_effect)*baseTexture*0.75 + distortion_effect*color2);
+	
+	vec4 color3 = texture(TEXTURE, UV + vec2(fract(TIME*0.1*intensity), tan(TIME*0.02*intensity) ));
+	COLOR = COLOR - ((1.0-negative_effect)*baseTexture*0.5 + negative_effect*color3);
+	
+	COLOR.r = (1.0-red_displacement)*baseTexture.r + red_displacement*texture(TEXTURE, UV-vec2(sin(TIME*0.1*intensity) + 0.2, 0.1)).r;
+	COLOR.g = (1.0-green_displacement)*baseTexture.g +  green_displacement*texture(TEXTURE, UV+vec2(- 0.2, sin(TIME*0.1*intensity))).g;
+	COLOR.b = (1.0-blue_displacement)*baseTexture.b + blue_displacement*texture(TEXTURE, UV+vec2(sin(TIME*0.1*intensity) + 0.2, 0.1)).b;
+	COLOR = COLOR + texture(TEXTURE, UV + UV*ghost)*ghost;
+}"
+
+[sub_resource type="ShaderMaterial" id=18]
+shader = SubResource( 17 )
+shader_param/red_displacement = 0.1
+shader_param/green_displacement = 0.1
+shader_param/blue_displacement = 0.1
+shader_param/ghost = 0.0
+shader_param/intensity = 0.5
+shader_param/scan_effect = 0.5
+shader_param/distortion_effect = 0.5
+shader_param/negative_effect = 0.5
+shader_param/bloomRadius = 2.0
+shader_param/bloomThreshold = 1.0
+shader_param/bloomIntensity = 1.5
+
+[sub_resource type="Shader" id=19]
+code = "shader_type canvas_item;
+
+
+uniform float red_displacement : hint_range(-1.0,1.0) = 0.5;
+uniform float green_displacement : hint_range(-1.0,1.0) = -0.25;
+uniform float blue_displacement : hint_range(-1.0,1.0) = -0.25;
+uniform float ghost : hint_range(0.0, 1.0) = 0.5;
+uniform float intensity : hint_range(0.0,1.0) = 0.5;
+uniform float scan_effect : hint_range(0.0,1.0) = 0.5;
+uniform float distortion_effect : hint_range(0.0,1.0) = 0.5;
+uniform float negative_effect : hint_range(0.0,1.0) = 0.5;
+
+uniform float bloomRadius = 1.0;
+uniform float bloomThreshold = 1.0;
+uniform float bloomIntensity = 1.0;
+
+vec3 GetBloomPixel(sampler2D tex, vec2 uv, vec2 texPixelSize) {
+	vec2 uv2 = floor(uv / texPixelSize) * texPixelSize;
+	uv2 += texPixelSize * .001;
+	vec3 tl = max(texture(tex, uv2).rgb - bloomThreshold, 0.0);
+	vec3 tr = max(texture(tex, uv2 + vec2(texPixelSize.x, 0.0)).rgb - bloomThreshold, 0.0);
+	vec3 bl = max(texture(tex, uv2 + vec2(0.0, texPixelSize.y)).rgb - bloomThreshold, 0.0);
+	vec3 br = max(texture(tex, uv2 + vec2(texPixelSize.x, texPixelSize.y)).rgb - bloomThreshold, 0.0);
+	vec2 f = fract( uv / texPixelSize );
+
+	vec3 tA = mix( tl, tr, f.x );
+	vec3 tB = mix( bl, br, f.x );
+
+	return mix( tA, tB, f.y );
+}
+
+vec3 GetBloom(sampler2D tex, vec2 uv, vec2 texPixelSize) {
+	vec3 bloom = vec3(0.0);
+	vec2 off = vec2(1) * texPixelSize * bloomRadius;
+	bloom += GetBloomPixel(tex, uv + off * vec2(-1, -1), texPixelSize * bloomRadius) * 0.292893;
+	bloom += GetBloomPixel(tex, uv + off * vec2(-1, 0), texPixelSize * bloomRadius) * 0.5;
+	bloom += GetBloomPixel(tex, uv + off * vec2(-1, 1), texPixelSize * bloomRadius) * 0.292893;
+	bloom += GetBloomPixel(tex, uv + off * vec2(0, -1), texPixelSize * bloomRadius) * 0.5;
+	bloom += GetBloomPixel(tex, uv + off * vec2(0, 0), texPixelSize * bloomRadius) * 1.0;
+	bloom += GetBloomPixel(tex, uv + off * vec2(0, 1), texPixelSize * bloomRadius) * 0.5;
+	bloom += GetBloomPixel(tex, uv + off * vec2(1, -1), texPixelSize * bloomRadius) * 0.292893;
+	bloom += GetBloomPixel(tex, uv + off * vec2(1, 0), texPixelSize * bloomRadius) * 0.5;
+	bloom += GetBloomPixel(tex, uv + off * vec2(1, 1), texPixelSize * bloomRadius) * 0.292893;
+	bloom /= 4.171573f;
+	return bloom;
+}
+
+void fragment() {
+	vec4 col = texture(TEXTURE, UV);
+	vec3 bloom = GetBloom(TEXTURE, UV, TEXTURE_PIXEL_SIZE);
+	col.rgb += bloom * bloomIntensity;
+	COLOR = col;
+	vec4 baseTexture = texture(TEXTURE, UV);
+	vec4 color1 = texture(TEXTURE, UV+vec2(sin(TIME*0.2*intensity), tan(UV.y)));
+	COLOR = (1.0-scan_effect)*baseTexture*0.75 + scan_effect*color1;
+	
+	vec4 color2 = texture(TEXTURE, UV+vec2(fract(TIME*0.01*intensity), cos(fract(TIME*intensity)*10.0)));
+	COLOR = COLOR + ((1.0-distortion_effect)*baseTexture*0.75 + distortion_effect*color2);
+	
+	vec4 color3 = texture(TEXTURE, UV + vec2(fract(TIME*0.1*intensity), tan(TIME*0.02*intensity) ));
+	COLOR = COLOR - ((1.0-negative_effect)*baseTexture*0.5 + negative_effect*color3);
+	
+	COLOR.r = (1.0-red_displacement)*baseTexture.r + red_displacement*texture(TEXTURE, UV-vec2(sin(TIME*0.1*intensity) + 0.2, 0.1)).r;
+	COLOR.g = (1.0-green_displacement)*baseTexture.g +  green_displacement*texture(TEXTURE, UV+vec2(- 0.2, sin(TIME*0.1*intensity))).g;
+	COLOR.b = (1.0-blue_displacement)*baseTexture.b + blue_displacement*texture(TEXTURE, UV+vec2(sin(TIME*0.1*intensity) + 0.2, 0.1)).b;
+	COLOR = COLOR + texture(TEXTURE, UV + UV*ghost)*ghost;
+}"
+
+[sub_resource type="ShaderMaterial" id=20]
+shader = SubResource( 19 )
+shader_param/red_displacement = 0.5
+shader_param/green_displacement = -0.25
+shader_param/blue_displacement = -0.25
+shader_param/ghost = 0.0
+shader_param/intensity = 0.5
+shader_param/scan_effect = 0.5
+shader_param/distortion_effect = 0.5
+shader_param/negative_effect = 0.5
+shader_param/bloomRadius = 2.0
+shader_param/bloomThreshold = 2.0
+shader_param/bloomIntensity = 2.0
+
+[node name="LightTile" type="Sprite"]
+modulate = Color( 1, 1, 1, 0.427451 )
+material = SubResource( 18 )
+position = Vector2( -71, -19 )
+texture = ExtResource( 2 )
+script = ExtResource( 1 )
+
+[node name="Light2D" type="Light2D" parent="."]
+modulate = Color( 1, 1, 1, 0.278431 )
+material = SubResource( 20 )
+z_index = 1
+texture = ExtResource( 2 )
+texture_scale = 1.1
+color = Color( 0.85098, 0.941176, 0.737255, 1 )
+energy = 1.5
